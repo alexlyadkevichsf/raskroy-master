@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Раскрой проката</title>
+<meta name="description" content="Раскрой линейного проката на штанги: загрузите Excel со списком деталей и получите карту раскроя с минимальным количеством штанг.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='11' width='28' height='10' rx='1.5' fill='%239a3b26'/%3E%3Cpath d='M8 11v4M13 11v6M18 11v4M23 11v6' stroke='%23fff' stroke-width='1.6'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">Карта раскроя · линейный прокат</div>
+    <h1>Раскрой проката</h1>
+    <p>Загрузите Excel со списком деталей и скачайте готовую карту раскроя. Программа подбирает схемы так, чтобы штанг ушло как можно меньше, и проверяет, что каждая деталь учтена.</p>
+  </header>
+
+  <section class="card" id="step-file" aria-labelledby="h-file">
+    <h2 id="h-file"><span class="step">1</span>Исходная таблица</h2>
+    <label class="drop" id="drop" for="file">
+      <input type="file" id="file" accept=".xlsx,.xlsm,.csv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+      <strong>Перетащите файл .xlsx сюда или нажмите, чтобы выбрать</strong>
+      <span>Или скопируйте ячейки в Excel и нажмите Ctrl+V на этой странице</span>
+    </label>
+    <div class="row">
+      <span class="chip" id="src-chip"></span>
+      <label class="row" id="sheet-wrap" hidden><span class="hint">Лист:</span> <select id="sheet"></select></label>
+      <button type="button" class="ghost" id="paste-toggle">Вставить текстом</button>
+    </div>
+    <div id="paste-box" hidden>
+      <textarea id="paste" placeholder="Вставьте сюда ячейки из Excel: первая строка — названия профилей, ниже длины деталей"></textarea>
+    </div>
+    <details class="fmt">
+      <summary>Как должна выглядеть таблица</summary>
+      <ul>
+        <li>Каждая колонка — один профиль: название в заголовке (<code>уголок 75х6</code>, <code>12п</code>), ниже длины деталей в миллиметрах.</li>
+        <li><code>2048*3</code> — три детали по 2048 мм. Число без «*» — одна деталь. Одинаковые длины из разных строк складываются.</li>
+        <li>Над таблицей можно написать параметры одной строкой: <code>ширина реза 4 мм, длина штанги 11950 мм</code>. Если их нет, задайте ниже.</li>
+      </ul>
+    </details>
+  </section>
+
+  <section class="card" id="step-setup" aria-labelledby="h-setup">
+    <h2 id="h-setup"><span class="step">2</span>Параметры и профили</h2>
+    <div class="params">
+      <div class="field">
+        <label for="stock">Длина штанги, мм</label>
+        <input type="number" id="stock" min="100" max="50000" step="1">
+        <div class="src" id="stock-src"></div>
+      </div>
+      <div class="field">
+        <label for="kerf">Ширина реза (пропил), мм</label>
+        <input type="number" id="kerf" min="0" max="20" step="0.5">
+        <div class="src" id="kerf-src"></div>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Считать</th><th>Профиль</th><th class="r">Деталей</th><th class="r">Длин</th><th class="r">Всего, м</th><th>Своя длина штанги</th></tr></thead>
+        <tbody id="profiles"></tbody>
+      </table>
+    </div>
+    <div class="notes" id="parse-notes"></div>
+  </section>
+
+  <section class="card" id="step-result" aria-labelledby="h-result">
+    <h2 id="h-result"><span class="step">3</span>Результат</h2>
+    <div class="status">
+      <div class="msg" id="run-msg" aria-live="polite"></div>
+      <button type="button" class="primary" id="download" disabled>Скачать Excel</button>
+    </div>
+    <div class="notes" id="dl-notes"></div>
+    <div class="tiles" id="tiles"></div>
+    <div class="legend"><span><b class="l1"></b>деталь</span><span><b class="l2"></b>остаток штанги</span><span>Тонкий просвет — рез</span></div>
+    <div id="plans"></div>
+  </section>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="assets/solver.js" id="solver-src"></script>
+<script src="assets/xlsxio.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
